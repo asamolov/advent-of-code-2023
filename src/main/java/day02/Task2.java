@@ -31,7 +31,6 @@ public class Task2 {
 
         int lineN = 0;
         int acc = 0;
-        game_loop:
         for (var line : lines) {
             lineN++;
             var g = game.matcher(line);
