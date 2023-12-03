@@ -81,9 +81,9 @@ public class Task1 {
             output.add(sb.toString());
         }
 
-        log.info("Result: {}", acc);
         log.info(HIGHLIGHT_START + "Highlighted" + HIGHLIGHT_END + " numbers are not adjacent to a symbol");
         output.forEach(log::warn);
+        log.info("Result: {}", acc);
     }
 
     private boolean check(char[] map, int start, int end) {
