@@ -25,7 +25,7 @@ public class Task1 {
     }
 
     public static void main(String[] args) {
-        var task = new Task1("input_small.txt");
+        var task = new Task1("input.txt");
         task.run();
     }
 
@@ -48,8 +48,8 @@ public class Task1 {
                     set(map, i - 1, j - 1);
                     set(map, i, j - 1);
                     set(map, i + 1, j - 1);
-                    set(map, i, j - 1);
-                    set(map, i, j + 1);
+                    set(map, i - 1, j);
+                    set(map, i + 1, j);
                     set(map, i - 1, j + 1);
                     set(map, i, j + 1);
                     set(map, i + 1, j + 1);
