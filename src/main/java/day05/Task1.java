@@ -230,7 +230,9 @@ public class Task1 {
             var newRange = new Range(map(range.dst), map(range.src), coveredLength);
 
             // reminder
-            var reminder = new Range(range.dst + length, range.src + length, Math.max(0, uncoveredLength));
+            var reminder = new Range(range.dst + coveredLength,
+                                     range.src + coveredLength,
+                                     Math.max(0, uncoveredLength));
 
             return new MappedRange(newRange, reminder);
         }
