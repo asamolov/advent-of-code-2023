@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class Task1 {
@@ -43,6 +44,18 @@ public class Task1 {
         }
 
         log.info("Part 1 result from '{}': {}", file, acc);
+
+        it = lines.iterator();
+        var totalTime = parseLongNumber(it);
+        var totalDistance = parseLongNumber(it);
+        log.info("Part 2 result from '{}': {}", file, winningOptions(totalTime, totalDistance));
+    }
+
+    private long parseLongNumber(Iterator<String> iterator) {
+        var longNumber = DIGIT.matcher(iterator.next()).results()
+          .map(MatchResult::group)
+          .collect(Collectors.joining());
+        return Long.parseLong(longNumber);
     }
 
     private long winningOptions(long time, long distance) {
