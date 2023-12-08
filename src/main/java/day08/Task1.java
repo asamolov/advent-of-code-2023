@@ -41,6 +41,7 @@ public class Task1 {
         var current = "AAA";
         while (!"ZZZ".equals(current)) {
             current = instructions.findNext(nodes.get(current));
+            instructions.next();
         }
         log.info("Part 1 result from '{}': {}", file, instructions.counter);
     }
@@ -84,12 +85,16 @@ public class Task1 {
         int counter = 0;
 
         String findNext(Node node) {
-            var index = counter++ % instr.length();
+            var index = counter % instr.length();
             return switch (instr.charAt(index)) {
                 case 'L' -> node.left;
                 case 'R' -> node.right;
                 default -> throw new IllegalStateException("Unexpected value: " + instr.charAt(index));
             };
+        }
+
+        void next() {
+            counter++;
         }
     }
 }
