@@ -127,7 +127,7 @@ public class Task1 {
             array[0] += nJokers;
 
             int strength = 0;
-            for (int n : array) { // 4 of kind are transformed to 41000. 3 + 2 = 32000 etc.
+            for (int n : array) { // 5 of kind are 50000, 4 of kind are transformed to 41000. 3 + 2 = 32000 etc.
                 strength += n;
                 strength *= 10;
             }
