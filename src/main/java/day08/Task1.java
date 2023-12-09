@@ -7,26 +7,29 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class Task1 {
     private static final Pattern INSTRUCTIONS = Pattern.compile("[RL]+");
     private static final Pattern NODE = Pattern.compile("(\\w{3})\\s=\\s\\((\\w{3}),\\s(\\w{3})\\)");
     private final String file;
+    private final boolean findAll;
 
-    public Task1(String file) {
+    public Task1(String file, boolean findAll) {
         this.file = file;
+        this.findAll = findAll;
     }
 
     public static void main(String[] args) {
-        new Task1("input_small.txt").run();
-        new Task1("input_small2.txt").run();
-        new Task1("input.txt").run();
+//        new Task1("input_small.txt", false).run();
+//        new Task1("input_small2.txt", false).run();
+//        new Task1("input.txt", false).run();
+        new Task1("input_small3.txt", true).run();
+        new Task1("input.txt", true).run();
     }
 
     @SneakyThrows
@@ -38,12 +41,43 @@ public class Task1 {
         var instructions = parseInstructions(iterator);
         var nodes = parseNodes(iterator);
 
-        var current = "AAA";
-        while (!"ZZZ".equals(current)) {
-            current = instructions.findNext(nodes.get(current));
-            instructions.next();
+        List<String> allStarts;
+        if (this.findAll) {
+            allStarts = nodes.keySet().stream().filter(id -> id.endsWith("A")).collect(Collectors.toList());
+        } else {
+            allStarts = new ArrayList<>();
+            allStarts.add("AAA");
         }
-        log.info("Part 1 result from '{}': {}", file, instructions.counter);
+
+        var loops = new ArrayList<>();
+        for (String start : allStarts) {
+            instructions.reset();
+            var current = start;
+            var visited = new HashMap<String, Integer>();
+            Integer lastVisitedOn;
+            while (true) {
+                current = instructions.findNext(nodes.get(current));
+                lastVisitedOn = visited.put(current + instructions.index(), instructions.counter);
+                if (lastVisitedOn == null) {
+                    instructions.next();
+                } else {
+                    // found loop
+                    log.info("Found loop after {} iterations", instructions.counter);
+                    log.info("Start: {}, period: {}", lastVisitedOn, instructions.counter - lastVisitedOn);
+                    break;
+                }
+            }
+        }
+
+        log.info("Part {} result from '{}': {}", findAll ? 2 : 1, file, instructions.counter);
+    }
+
+    private boolean shouldStop(List<String> current) {
+        if (findAll) {
+            return current.stream().allMatch(id -> id.endsWith("Z"));
+        } else {
+            return current.stream().allMatch("ZZZ"::equals);
+        }
     }
 
     private Map<String, Node> parseNodes(Iterator<String> iterator) {
@@ -85,16 +119,28 @@ public class Task1 {
         int counter = 0;
 
         String findNext(Node node) {
-            var index = counter % instr.length();
-            return switch (instr.charAt(index)) {
+            return switch (direction()) {
                 case 'L' -> node.left;
                 case 'R' -> node.right;
-                default -> throw new IllegalStateException("Unexpected value: " + instr.charAt(index));
+                default -> throw new IllegalStateException("Unexpected value: " + direction());
             };
+        }
+
+        char direction() {
+            var index = index();
+            return instr.charAt(index);
+        }
+
+        int index() {
+            return counter % instr.length();
         }
 
         void next() {
             counter++;
+        }
+
+        void reset() {
+            counter = 0;
         }
     }
 }
