@@ -114,6 +114,9 @@ public class Task1 {
         new Task1("input_small1.txt").run();
         new Task1("input_small2.txt").run();
         new Task1("input_small3.txt").run();
+        new Task1("input_small4.txt").run();
+        new Task1("input_small5.txt").run();
+        new Task1("input_small6.txt").run();
         new Task1("input.txt").run();
     }
 
@@ -146,6 +149,26 @@ public class Task1 {
         } while (notSame(nodes));
 
         log.info("Part 1 result from '{}': {}", file, nodes.get(0).depth);
+
+        // Part 2. Let's calculate a line interval over the pipe curve. when going W->E - positive, E->W - negative
+
+        var area = 0; // area inside the curve
+        var perimeter = 0; // perimeter of the curve
+        // let's start and will go in any direction
+        var prev = n;
+        do {
+            var next = step(prev);
+            // calculate the area under the line
+            area += (next.x - prev.x) * next.y;
+            perimeter++;
+            prev = next;
+        } while (prev.pipe != Pipe.START);
+
+        area = Math.abs(area); // since we don't care about the direction
+
+        // this formula gives # of int coordinates nodes within the curve
+        var result = area - perimeter / 2 + 1;
+        log.info("Part 2 result from '{}': {}", file, result);
     }
 
     private boolean notSame(List<Node> nodes) {
