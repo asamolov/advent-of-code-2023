@@ -139,19 +139,7 @@ public class Task1 {
         var start = Pipe.START;
 
         var n = new Node(x, y, start, null, 0);
-        var nodes = new ArrayList<Node>();
-        for (Direction value : values()) {
-            attempt(n, value).ifPresent(nodes::add);
-        }
-
-        do {
-            nodes.replaceAll(this::step);
-        } while (notSame(nodes));
-
-        log.info("Part 1 result from '{}': {}", file, nodes.get(0).depth);
-
         // Part 2. Let's calculate a line interval over the pipe curve. when going W->E - positive, E->W - negative
-
         var area = 0; // area inside the curve
         var perimeter = 0; // perimeter of the curve
         // let's start and will go in any direction
@@ -168,11 +156,9 @@ public class Task1 {
 
         // this formula gives # of int coordinates nodes within the curve
         var result = area - perimeter / 2 + 1;
-        log.info("Part 2 result from '{}': {}", file, result);
-    }
 
-    private boolean notSame(List<Node> nodes) {
-        return nodes.stream().distinct().count() > 1;
+        log.info("Part 1 result from '{}': {}", file, perimeter / 2); // first task solution is just half of perimeter
+        log.info("Part 2 result from '{}': {}", file, result);
     }
 
     private Node step(Node node) {
