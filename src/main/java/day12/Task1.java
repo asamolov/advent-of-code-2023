@@ -1,7 +1,10 @@
 package day12;
 
+import ch.qos.logback.classic.Level;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -29,12 +32,36 @@ public class Task1 {
         var lines = Files.readAllLines(Paths.get(this.getClass().getResource(file).toURI()), Charset.defaultCharset())
           .stream().filter(s -> !s.isBlank()).toList();
 
+        enableLogLevel(Level.DEBUG);
         var result = lines.stream()
           .map(this::parseRecord)
           .mapToInt(this::calculateArrangements)
           .sum();
 
         log.info("Part 1 result from '{}': {}", file, result);
+
+        enableLogLevel(Level.INFO);
+        var result2 = lines.parallelStream()
+          .map(this::parseRecord)
+          .map(this::unfoldRecord)
+          .mapToInt(this::calculateArrangements)
+          .sum();
+
+        log.info("Part 2 result from '{}': {}", file, result2);
+    }
+
+    private static void enableLogLevel(Level level) {
+        ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        root.setLevel(level);
+    }
+
+    private Springs unfoldRecord(Springs springs) {
+        var conds = String.join("?", Collections.nCopies(5, springs.conditions()));
+        var arrangements = Collections.nCopies(5, springs.groups())
+          .stream()
+          .flatMapToInt(Arrays::stream)
+          .toArray();
+        return new Springs(conds, arrangements);
     }
 
     private int calculateArrangements(Springs record) {
@@ -48,13 +75,18 @@ public class Task1 {
         log.warn("Checking {}", record);
         for (int i = 0; i < record.conditions().length(); i++) {
             var ch = record.conditions().charAt(i);
-
+            var remains = record.conditions().length() - i;
             // iterate over matchers
             var it = matchers.listIterator();
             while (it.hasNext()) {
                 var dfa = it.next();
-                log.warn("{}: {} <-- {}", i, dfa, ch);
+                log.debug("{}: {} <-- {}", i, dfa, ch);
                 it.remove();
+                if (dfa.mustAccept() > remains) {
+                    // shortcut, won't match
+                    log.debug("\tshortcut!");
+                    continue;
+                }
                 if (ch == '.' || ch == '?') {
                     var dotDfa = dfa.dup();
                     if (dotDfa.accept('.')) {
@@ -76,14 +108,14 @@ public class Task1 {
         matchers.removeIf(dfa -> !dfa.atEnd());
 
         // 3. each matching line counts as 1 arrangement
-        log.debug("{}: {} arrangements", record.conditions, matchers.size());
+        log.info("{}: {} arrangements", record.conditions, matchers.size());
         return matchers.size();
     }
 
     private DFA buildRegexp(int[] groups) {
         // see https://cyberzhg.github.io/toolbox/min_dfa?regex=LiojLisjLisjIyMuKg==
         var dfa = new DFABuilder();
-        dfa.star('.'); // 0 or more . at the start
+//        dfa.star('.'); // 0 or more . at the start
         for (int i = 0; i < groups.length; i++) {
             if (i != 0) {
                 dfa.ch('.', 1); // . is requited between a pair of #
@@ -97,7 +129,12 @@ public class Task1 {
     }
 
     static class Node {
+        private final int index;
         Map<Character, Node> transitions = new HashMap<>();
+
+        public Node(int index) {
+            this.index = index;
+        }
 
         public void on(char ch, Node node) {
             transitions.put(ch, node);
@@ -133,6 +170,10 @@ public class Task1 {
             return current == last;
         }
 
+        public int mustAccept() {
+            return last.index - current.index;
+        }
+
         public boolean accept(char ch) {
             var next = current.next(ch);
             if (next != null) {
@@ -154,7 +195,7 @@ public class Task1 {
         Node root, last;
 
         public DFABuilder() {
-            root = last = new Node(); // adds root
+            root = last = new Node(0); // adds root
         }
 
         public void star(char ch) {
@@ -163,7 +204,7 @@ public class Task1 {
 
         public void ch(char ch, int count) {
             for (int i = 0; i < count; i++) {
-                var next = new Node();
+                var next = new Node(last.index + 1);
                 last.on(ch, next);
                 last = next;
             }
